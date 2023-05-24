@@ -2,14 +2,15 @@
 
 {% block body %}
     <h2>Active Listings</h2>
-    <ul>
+    <ul >
     {% for listing in listings %}
-
-        <li>{% if listing.image %}
-            <img src="{{ listing.image }}" alt="image" style="height: 10%; width: 10%;">
+        <li style="border:1px #333 solid; width: 200px; padding: 1rem; margin: 1rem;">{% if listing.image %}
+            <img src="{{ listing.image }}" alt="image" style="height: 100%; width: 100%;">
             {% endif %}
-            <li><a href="{% url 'listing' listing_id=listing.id%}"> <h2>{{ listing.name }}</h2></a>      
+            <a href="{% url 'listing' listing_id=listing.id%}"> <h2>{{ listing.name }}</h2></a>
+        <p><h4>Description</h4>{{ listing.description|truncatechars:100}}</p>
             <h1>{{ listing.price.all.last}}0$</h1>
+            <h4>added</h4>  {{ listing.publishing_date|timesince}}
 
         </li>
    {% endfor %}

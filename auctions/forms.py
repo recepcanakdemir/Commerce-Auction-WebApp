@@ -8,7 +8,7 @@ class ListingForm(forms.ModelForm):
         model = Listing
         fields = [
             'name',
-            'price',
+            'starting_price',
             'description',
             'category',
             'image',
@@ -16,7 +16,7 @@ class ListingForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.TextInput(attrs={'class': 'form-control'}),
-            'price': forms.TextInput(attrs={'class': 'form-control'}),
+            'starting_price': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'image': forms.URLInput(attrs={'class': 'form-control'}),
         }
@@ -35,14 +35,24 @@ class CommentForm(forms.ModelForm):
             'content':forms.TextInput(attrs={'class':'form-control'}),
         }
 
-
 class BidForm(forms.ModelForm):
 
-    class Meta: 
+    class Meta:
         model = Bid
         fields = [
-             'price',
+            'price',
         ]
         widgets = {
-            'price':forms.NumberInput(attrs={'class':'form-control'}),
+            'price':forms.NumberInput(attrs={'class':'form-control'})
         }
+
+#class BidForm(forms.ModelForm):
+
+    #class Meta: 
+        #model = Bid
+        #fields = [
+             #'price',
+        #]
+        #widgets = {
+            #'price':forms.NumberInput(attrs={'class':'form-control'}),
+        #}

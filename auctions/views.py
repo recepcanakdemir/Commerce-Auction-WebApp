@@ -5,15 +5,22 @@ from django.shortcuts import render
 from django.urls import reverse
 from .forms import ListingForm,CommentForm,BidForm
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
-from .models import User,Listing,Bid,Category
+from .models import User,Listing,Category,Bid
 
 #listing detail page
 def listing(request, listing_id):
     #listing and category
+
     listing = Listing.objects.get(pk=listing_id)
     category = Category.objects.all().filter(pk= listing_id)
-    #comment form
+    if listing.creator == request.user:
+        creator_user = request.user    
+    else:
+        creator_user=None   
+
+    #----------------comment form---------------------------------
     comment_form = CommentForm(request.POST or None)
     if comment_form.is_valid():
         comment = comment_form.save(commit=False)
@@ -21,25 +28,45 @@ def listing(request, listing_id):
         comment.listing = listing
         comment.save()
         comment_form = CommentForm()
-    #bid form
-    start_bid = listing.price
+        return HttpResponseRedirect(listing.get_absolute_url())
+       # burada baslangic fiyatina sahip bir bid objesi olusturduk. Her listing sayfasina girildiginde yeniden olusturulmamasi icin bu listinge sahip bidleri olusturan querysetin uzunlugun 0 olmasi lazim diye sart koyduk. Yani hic yeni teklif yoksa bu sart calisacak.
+    start_bid = listing.starting_price
     bid_form = BidForm(request.POST or None)
+    if len(Bid.objects.all().filter(listing=listing)) is 0:
+        start_bid_object = Bid.objects.create(user = request.user, listing=listing, price=start_bid)
+        start_bid_object.save()
+    #-----------------bid form section ----------------------------
+    current_bid_amount = len(Bid.objects.all().filter(listing=listing))-1
     if bid_form.is_valid():
-        price = bid_form.save(commit=False)
-        if price.price > start_bid:
-            price.user = request.user
-            price.listing = listing
-            price.save()
-            bid_form = BidForm()
-            listing.value = Bid.objects.all().filter(pk=listing_id) #fix this 
+        bid = bid_form.save(commit=False)
+        if bid.price > Bid.objects.all().filter(listing=listing).last().price:
+           bid.user = request.user
+           bid.listing = listing
+           bid.save()
+           bid_form = BidForm()
+           messages.success(request,"Your bid is the current bid")
+           current_bid_amount+=1
+           return HttpResponseRedirect(listing.get_absolute_url())
         else:
-            listing.value= start_bid
-            #error message the offer must be greater than current price
+           messages.error(request,"Your bid must be greater than current price")
+           return HttpResponseRedirect(listing.get_absolute_url())
+    listing.starting_price = '{:.2f}'.format(float(Bid.objects.all().filter(listing=listing).last().price))
+
+    #----------------close auction section--------------------------
+    winner = None
+    if request.method == "POST" or listing.is_closed:
+        listing.is_closed = True 
+        listing.save()
+        winner = Bid.objects.all().filter(listing=listing).last().user
     context = {
         "listing":listing,
         "bid_form":bid_form,
         "category":category, 
-        "comment_form":comment_form
+        "comment_form":comment_form,
+        "creator_user":creator_user,
+        "is_closed":listing.is_closed,
+        "winner":winner,
+        "current_bid_amount":current_bid_amount
     }
     return render(request,"auctions/listing.html",context)
 
@@ -52,12 +79,22 @@ def categories(request):
     return render(request, "auctions/categories.html",{
         "categories":categories
     })
+def watchlist(request):
+    pass
+
+#def index(request):
+    #return render(request, "auctions/index.html",{
+        #"listings":Listing.objects.all()
+    #})
+
 def index(request):
-    return render(request, "auctions/index.html",{
-        "listings":Listing.objects.all()
+    listings = Listing.objects.all()
+    for listing in listings:
+        latest_bid = Bid.objects.filter(listing=listing).last()
+        listing.starting_price = '{:.2f}'.format(float(latest_bid.price))
+    return render(request, "auctions/index.html", {
+        "listings": listings
     })
-
-
 
 
 #creating listing page

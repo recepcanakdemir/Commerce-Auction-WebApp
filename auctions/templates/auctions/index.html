@@ -9,7 +9,7 @@
             {% endif %}
             <a href="{% url 'listing' listing_id=listing.id%}"> <h2>{{ listing.name }}</h2></a>
         <p><h4>Description</h4>{{ listing.description|truncatechars:100}}</p>
-            <h1>{{ listing.price.all.last}}0$</h1>
+            <h1>{{ listing.starting_price }}$</h1>
             <h4>added</h4>  {{ listing.publishing_date|timesince}}
 
         </li>

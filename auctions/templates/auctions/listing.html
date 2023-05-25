@@ -10,7 +10,8 @@
         {% endif %}
         <h1>Name : {{ listing.name }}</h1>
 
-            <h3>Price : {{ listing.value }}$</h3>
+            <h3>Price : {{ listing.starting_price }}$</h3>
+            <h1>{{current_bid_amount}} bid(s) on this listing</h1>
         
         <h3>Publishing Date {{ listing.publishing_date|timesince}}</h3>
         <p>Description{{ listing.description }}</p>
@@ -19,28 +20,46 @@
        <!-- Comment -->
         {% if user.is_authenticated %}
           <!-- Make offer -->
+        {% if winner is None %}
         <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
             {% csrf_token %}
             <input type="number" name="price" placeholder="enter offer here">
             <input type="submit" name="make_offer" value="make offer">
         </form>
-      
+        {% endif %}
+        <!-- Auction close -->
+        {% if creator_user and not is_closed %}
+        <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" value="Close Auction">
+        </form>
+        {% else %}
+            {% if winner%}
+        <p>{{ winner }} won the auction </p>
+            {% endif %}
+        {%endif%}
         <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
             {% csrf_token %}
             <input type="text" name="title" placeholder="Enter title of your comment">
             <textarea name="content"  cols="30" rows="10" placeholder="Write your comments here "></textarea>
             <input type="submit" name="submit_comment" value="Send">
         </form>       
-        {% else%}
-        <p><a href="{% url 'login' %}">Login </a>to be able to comment</p>
+       {% else%}
+       <p><a href="{% url 'login' %}">Login </a>to be able to comment</p>
         {% endif %}
-
+        {% if messages %}
+    {% for message in messages %}
+        <h1>{{message}}</h1>
+        {% endfor %}
+       {% endif %}
+         
+                      
         <h1>Comments</h1>
 
         {% for comment in  listing.comment.all %}
             <li><h3>{{ comment.title }}</h3>
             <p>{{comment.content}}</p>  
-            <p><span style="font-weight: bold;">By:  </span>{{ comment.user}}</p></li> 
+            <p><span style="font-weight: bold;">By:  </span>{{ comment.user.username }}</p></li> 
         {% endfor %}
 
     </ul>

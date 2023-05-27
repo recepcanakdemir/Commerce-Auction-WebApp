@@ -7,7 +7,7 @@ from .forms import ListingForm,CommentForm,BidForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from .models import User,Listing,Category,Bid
+from .models import User,Listing,Category,Bid,Watchlist
 
 #listing detail page
 def listing(request, listing_id):
@@ -29,12 +29,15 @@ def listing(request, listing_id):
         comment.save()
         comment_form = CommentForm()
         return HttpResponseRedirect(listing.get_absolute_url())
-       # burada baslangic fiyatina sahip bir bid objesi olusturduk. Her listing sayfasina girildiginde yeniden olusturulmamasi icin bu listinge sahip bidleri olusturan querysetin uzunlugun 0 olmasi lazim diye sart koyduk. Yani hic yeni teklif yoksa bu sart calisacak.
+
+    # burada baslangic fiyatina sahip bir bid objesi olusturduk. Her listing sayfasina girildiginde yeniden olusturulmamasi icin bu listinge sahip bidleri olusturan querysetin uzunlugun 0 olmasi lazim diye sart koyduk. Yani hic yeni teklif yoksa bu sart calisacak.
     start_bid = listing.starting_price
     bid_form = BidForm(request.POST or None)
     if len(Bid.objects.all().filter(listing=listing)) is 0:
         start_bid_object = Bid.objects.create(user = request.user, listing=listing, price=start_bid)
         start_bid_object.save()
+    
+
     #-----------------bid form section ----------------------------
     current_bid_amount = len(Bid.objects.all().filter(listing=listing))-1
     if bid_form.is_valid():
@@ -54,10 +57,33 @@ def listing(request, listing_id):
 
     #----------------close auction section--------------------------
     winner = None
+    
+  #  if request.method == "POST" or listing.is_closed:
+        #listing.is_closed = True 
+        #listing.save()
+        #winner = Bid.objects.all().filter(listing=listing).last().user
+    
+    #---------------- add to watchlist section-----------------------
+    
+    # new POST section
+
     if request.method == "POST" or listing.is_closed:
-        listing.is_closed = True 
-        listing.save()
-        winner = Bid.objects.all().filter(listing=listing).last().user
+        if  request.POST.get("close_auction") or listing.is_closed:
+            listing.is_closed = True 
+            listing.save()
+            winner = Bid.objects.all().filter(listing=listing).last().user
+        if request.POST.get("add_to_watchlist"):
+            listing.is_in_watchlist = True
+            listing.save()
+            listing.watchlist.add(request.user)
+        if request.POST.get("remove_from_watchlist"):
+            listing.is_in_watchlist = False
+            listing.save()
+            listing.watchlist.remove(request.user)
+    if request.user.is_authenticated:
+        length_of_watchlist = len(Listing.objects.all().filter(watchlist = request.user))
+    else:
+        length_of_watchlist=None
     context = {
         "listing":listing,
         "bid_form":bid_form,
@@ -65,22 +91,41 @@ def listing(request, listing_id):
         "comment_form":comment_form,
         "creator_user":creator_user,
         "is_closed":listing.is_closed,
+        "is_in_watchlist":listing.is_in_watchlist,
         "winner":winner,
-        "current_bid_amount":current_bid_amount
+        "current_bid_amount":current_bid_amount,
+        "length_of_watchlist":length_of_watchlist
     }
     return render(request,"auctions/listing.html",context)
 
 
 
 
-#categores page
+#categories page
 def categories(request):
+    if request.user.is_authenticated:
+        length_of_watchlist = len(Listing.objects.all().filter(watchlist = request.user))
+    else:
+        length_of_watchlist=None
     categories = Category.objects.all()
     return render(request, "auctions/categories.html",{
-        "categories":categories
+        "categories":categories,
+        "length_of_watchlist":length_of_watchlist
     })
+
+#watchllist page
 def watchlist(request):
-    pass
+    user = request.user
+    if user.is_authenticated:
+        length_of_watchlist = len(Listing.objects.all().filter(watchlist = request.user))
+    else:
+        length_of_watchlist=None
+    listings = Listing.objects.all().filter(watchlist = user)
+    context = {
+        "listings":listings,
+        "length_of_watchlist": length_of_watchlist
+    }
+    return render(request,"auctions/watchlist.html",context)
 
 #def index(request):
     #return render(request, "auctions/index.html",{
@@ -89,11 +134,16 @@ def watchlist(request):
 
 def index(request):
     listings = Listing.objects.all()
+    if request.user.is_authenticated:
+        length_of_watchlist = len(Listing.objects.all().filter(watchlist = request.user))
+    else:
+        length_of_watchlist=None
     for listing in listings:
         latest_bid = Bid.objects.filter(listing=listing).last()
         listing.starting_price = '{:.2f}'.format(float(latest_bid.price))
     return render(request, "auctions/index.html", {
-        "listings": listings
+        "listings": listings,
+        "length_of_watchlist":length_of_watchlist
     })
 
 
@@ -107,14 +157,16 @@ def create(request):
         listing.save()
         return HttpResponseRedirect(listing.get_absolute_url())
     context = {
-        'form':form
+        "form":form,
+        "length_of_watchlist":len(Listing.objects.all().filter(watchlist = request.user))
     }
     return render(request,'auctions/create.html',context)
 
 def category(request,category_name):
     listings = Listing.objects.filter(category__name= category_name)
     return render(request, "auctions/index.html",{
-        "listings":listings
+        "listings":listings,
+        "length_of_watchlist":len(Listing.objects.all().filter(watchlist = request.user))
     })
 
 
@@ -171,6 +223,7 @@ def register(request):
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
+            Watchlist.objects.all().create(user = user)
         except IntegrityError:
             return render(request, "auctions/register.html", {
                 "message": "Username already taken."

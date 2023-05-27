@@ -3,55 +3,74 @@
 {% block title %}
     <title>{{ listing.name }}</title>
 {% endblock %}
-
+{% block h1%}
+    <div style="width: 20px;height: 20px; color: white; background-color: #333; text-align: center; border-radius: 1rem; font-size: 12.5px; margin-top: .6rem;margin-left:-13px;">{{ length_of_watchlist }}</div>
+{% endblock%}
+    
 {% block body %}
-    <ul>{% if listing.image %}
-        <img src ="{{ listing.image }}" style = "height: 30%; width: 30%;">
-        {% endif %}
-        <h1>Name : {{ listing.name }}</h1>
-
-            <h3>Price : {{ listing.starting_price }}$</h3>
-            <h1>{{current_bid_amount}} bid(s) on this listing</h1>
-        
-        <h3>Publishing Date {{ listing.publishing_date|timesince}}</h3>
-        <p>Description{{ listing.description }}</p>
-        <h4> Category: <a href="{% url 'category' category_name=listing.category %}">{{ listing.category}}</a></h4>
-        <h4>Created By: {{ listing.creator.username }}<h4>
-       <!-- Comment -->
-        {% if user.is_authenticated %}
-          <!-- Make offer -->
-        {% if winner is None %}
-        <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
-            {% csrf_token %}
-            <input type="number" name="price" placeholder="enter offer here">
-            <input type="submit" name="make_offer" value="make offer">
-        </form>
-        {% endif %}
-        <!-- Auction close -->
-        {% if creator_user and not is_closed %}
-        <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
-            {% csrf_token %}
-            <input type="submit" value="Close Auction">
-        </form>
-        {% else %}
-            {% if winner%}
-        <p>{{ winner }} won the auction </p>
+   <ul class="main-page">
+    <div class="image-content">
+        {% if listing.image %}
+        <div class="image-container">
+            <img src ="{{ listing.image }}">
+        </div>
             {% endif %}
-        {%endif%}
-        <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
-            {% csrf_token %}
-            <input type="text" name="title" placeholder="Enter title of your comment">
-            <textarea name="content"  cols="30" rows="10" placeholder="Write your comments here "></textarea>
-            <input type="submit" name="submit_comment" value="Send">
-        </form>       
-       {% else%}
-       <p><a href="{% url 'login' %}">Login </a>to be able to comment</p>
-        {% endif %}
+        <div class="content">
+            <h1 class="name">{{ listing.name }}</h1>
+            <h3 class="price">${{ listing.starting_price }}</h3>
+            <h4 class="date">Publishing Date</h4><p>{{ listing.publishing_date|date:"M d, Y"}}</p>
+            <h4 class="description-title">Description</h4>
+            <p class="description">{{ listing.description }}</p>
+            <h4 class="category">Category: <a href="{% url 'category' category_name=listing.category %}">{{ listing.category}}</a></h4>
+            <h4 class="creator">Created By: {{ listing.creator.username }}<h4>
+            <h4 class="current-bid-amount">{{current_bid_amount}} bid(s) on this listing</h4>
+        </div>
+    </div>
+
+            <!-- Comment -->
+            {% if user.is_authenticated %}
+            <!-- Make offer -->
+                {% if winner is None %}
+                    {% if not is_closed %}
+                    <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
+                        {% csrf_token %}
+                        <input type="number" name="price" placeholder="enter offer here">
+                        <input type="submit" name="make_offer" value="Place Bid">
+                    </form>
+                    {% endif %}
+                {% endif %}
+                <!-- Auction close -->
+                    <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
+                        {% csrf_token %}
+                        {% if creator_user and not is_closed %}
+                            <input type="submit" value="Close Auction" name = "close_auction">
+                        {% else %}
+                            {% if winner%}
+                                <p>{{ winner }} won the auction </p>
+                            {% endif %}
+                        {% endif %}
+                        <!-- Add to wathch list -->
+                        {% if not is_in_watchlist %}
+                        <input type="submit" value="Add To Watchlist" name = "add_to_watchlist" >
+                        {% else %}
+                        <input type="submit" name="remove_from_watchlist" value="Remove From Watchlist">
+                        {% endif %}
+                    </form>
+                <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="text" name="title" placeholder="Enter title of your comment">
+                    <textarea name="content"  cols="30" rows="10" placeholder="Write your comments here "></textarea>
+                    <input type="submit" name="submit_comment" value="Send">
+                </form>       
+            {% else %}
+            <p><a href="{% url 'login' %}">Login </a>to be able to comment</p>
+        {% endif %} <!-- endif of isauthanticated -->
+
         {% if messages %}
-    {% for message in messages %}
-        <h1>{{message}}</h1>
-        {% endfor %}
-       {% endif %}
+            {% for message in messages %}
+            <h1>{{message}}</h1>
+            {% endfor %}
+        {% endif %}
          
                       
         <h1>Comments</h1>
@@ -61,6 +80,5 @@
             <p>{{comment.content}}</p>  
             <p><span style="font-weight: bold;">By:  </span>{{ comment.user.username }}</p></li> 
         {% endfor %}
-
     </ul>
 {% endblock%}

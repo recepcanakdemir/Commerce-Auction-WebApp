@@ -3,8 +3,8 @@
     <div style="width: 20px;height: 20px; color: white; background-color: #333; text-align: center; border-radius: 1rem; font-size: 12.5px; margin-top: .6rem;margin-left:-13px;">{{ length_of_watchlist }}</div>
 {% endblock%}
 {% block body %}
-    <h2>Active Listings</h2>
-    <ul>
+    <h2>Watchlist</h2>
+    <ul >
     {% for listing in listings %}
         <li style="border:1px #333 solid; width: 200px; padding: 1rem; margin: 1rem;">{% if listing.image %}
             <img src="{{ listing.image }}" alt="image" style="height: 100%; width: 100%;">

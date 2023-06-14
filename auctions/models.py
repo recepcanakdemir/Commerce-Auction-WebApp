@@ -18,9 +18,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-class Watchlist(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="watchlist_user",null=True)
-
 class Listing(models.Model):
     name = models.CharField(max_length=64)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null= False, default=True)
@@ -28,10 +25,9 @@ class Listing(models.Model):
     publishing_date = models.DateTimeField(auto_now_add=True)
     description = models.TextField(max_length=550,null=True)
     creator = models.ForeignKey(User,on_delete=models.CASCADE,related_name="creator",null=True)
+    user_watchlist = models.ManyToManyField(User,related_name="user_watchlist",blank=True)
     image = models.URLField(null=True, blank=True)
     is_closed = models.BooleanField(null=True,default=False)
-    is_in_watchlist = models.BooleanField(null=True,default=False)
-    watchlist = models.ManyToManyField(User,blank=True, related_name="watchlist")
     def __str__(self):
         return f"{self.name} price: {self.starting_price}$ published at {self.publishing_date}"
     def get_absolute_url(self):
@@ -52,14 +48,5 @@ class Bid(models.Model):
         ordering = ['price']
     def __str__(self):
         return str(self.price)
-
-#class Bid(models.Model):
-    #user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user",null=True)
-    #listing = models.ForeignKey(Listing,on_delete=models.CASCADE, related_name="price",null=True)
-    #price = models.DecimalField(max_digits=19, decimal_places=10)
-    #class Meta:
-        #ordering = ['price']
-    #def __str__(self):
-        #return str(self.price)
 
    

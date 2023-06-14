@@ -1,12 +1,10 @@
 {% extends "auctions/layout.html" %}
-
+{% block h1%}
+    <div class="length_of_watchlist">{{ length_of_watchlist }}</div>
+{% endblock%}
 {% block title %}
     <title>{{ listing.name }}</title>
 {% endblock %}
-{% block h1%}
-    <div style="width: 20px;height: 20px; color: white; background-color: #333; text-align: center; border-radius: 1rem; font-size: 12.5px; margin-top: .6rem;margin-left:-13px;">{{ length_of_watchlist }}</div>
-{% endblock%}
-    
 {% block body %}
    <ul class="main-page">
     <div class="image-content">
@@ -21,22 +19,16 @@
             <h1 class="name">{{ listing.name }}</h1>
             <h3 class="price">${{ listing.starting_price }}</h3>
             <h4 class="current-bid-amount">{{current_bid_amount}}bid(s) on this listing</h4>
+            <!-- Add to wathch list -->
+            {% if is_in_watchlist %}
+                <a class="add-rm-w" type = "button" href="{% url 'add_to_watchlist' listing.id %}">Remove From Watchlist</a>
+            {% else %}
+                <a class="add-rm-w" type = "button" href="{% url 'add_to_watchlist' listing.id %}">Add To Watchlist</a>
+            {% endif %}
             <p class="description">{{ listing.description }}</p>
             <h4 class="category">Category: <a href="{% url 'category' category_name=listing.category %}">{{ listing.category}}</a></p></h4>
             <h4 class="creator">Created By: {{ listing.creator.username }}<h4>
             <p class="time">Added {{ listing.publishing_date|date:"M d, Y, h:i A"}}</p>
-            <!-- Add to wathch list -->
-            {% if user.is_authenticated %}
-            <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
-                {% csrf_token %}
-                {% if not is_in_watchlist %}
-                <input  class="add-rm" type="submit" value="Add To Watchlist" name = "add_to_watchlist" >
-                {% else %}
-                <input class="add-rm" type="submit" name="remove_from_watchlist" value="Remove From Watchlist">
-                {% endif %}
-             {% endif %}
-            </form>
-            
             <!-- Make offer -->
             <form action="{% url 'listing' listing_id=listing.id %}" method="POST">
                 {% if winner is None %}

@@ -54,7 +54,12 @@ def listing(request, listing_id):
     else:
         length_of_watchlist=0
     #----------------close auction section--------------------------
-    winner = None   
+    winner = None
+
+    if request.method == "POST" or listing.is_closed:
+        listing.is_closed = True 
+        listing.save()
+        winner = Bid.objects.all().filter(listing=listing).last().user
     context = {
         "listing":listing,
         "bid_form":bid_form,

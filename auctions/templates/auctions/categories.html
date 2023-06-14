@@ -3,15 +3,16 @@
     <div style="width: 20px;height: 20px; color: white; background-color: #333; text-align: center; border-radius: 1rem; font-size: 12.5px; margin-top: .6rem;margin-left:-13px;">{{ length_of_watchlist }}</div>
 {% endblock%}
 {% block body %}
-    <h2>Categories</h2>
-    <ul>
+    <h2 class="active-listings">Categories</h2>
+    <ul class="categories">
     {% for category in categories%}
-        <li>{% if listing.image %}
-            <img src="{{ category.image }}" alt="image" style="height: 10%; width: 10%;">
+        <li>
+        <a href="{% url 'category' category_name=category.name %}">
+            {% if listing.image %}
+                <img src="{{ category.image }}" alt="image" style="height: 10%; width: 10%;">
             {% endif %}
-            <a href="{% url 'category' category_name=category.name %}"> <h2>{{ category.name }}</h2>      
-            
-
+                <p>{{ category.name }}</p>    
+        </a>
         </li>
    {% endfor %}
     </ul>

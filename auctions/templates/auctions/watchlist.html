@@ -3,18 +3,31 @@
     <div style="width: 20px;height: 20px; color: white; background-color: #333; text-align: center; border-radius: 1rem; font-size: 12.5px; margin-top: .6rem;margin-left:-13px;">{{ length_of_watchlist }}</div>
 {% endblock%}
 {% block body %}
+<div class="active-listings">
     <h2>Watchlist</h2>
+</div>
     <ul >
     {% for listing in listings %}
-        <li style="border:1px #333 solid; width: 200px; padding: 1rem; margin: 1rem;">{% if listing.image %}
-            <img src="{{ listing.image }}" alt="image" style="height: 100%; width: 100%;">
+        <!-- <li style="border:1px #333 solid; width: 200px; padding: 1rem; margin: 1rem;">{% if listing.image %} -->
+           <!-- <img src="{{ listing.image }}" alt="image" style="height: 100%; width: 100%;"> -->
+            <!-- {% endif %} -->
+            <!-- <a href="{% url 'listing' listing_id=listing.id%}"> <h2>{{ listing.name }}</h2></a> -->
+        <!-- <p><h4>Description</h4>{{ listing.description|truncatechars:100}}</p> -->
+            <!-- <h1>{{ listing.starting_price }}$</h1> -->
+            <!-- <h4>added</h4>  {{ listing.publishing_date|timesince}} -->
+        <!-- </li> -->
+        <li class ="listings">{% if listing.image %}
+            <div class="image-div">
+                <a href="{% url 'listing' listing_id=listing.id%}"><img class="listing-image"src="{{ listing.image }}" alt="image"></a>
+            </div>
             {% endif %}
-            <a href="{% url 'listing' listing_id=listing.id%}"> <h2>{{ listing.name }}</h2></a>
-        <p><h4>Description</h4>{{ listing.description|truncatechars:100}}</p>
-            <h1>{{ listing.starting_price }}$</h1>
-            <h4>added</h4>  {{ listing.publishing_date|timesince}}
-        </li>
+            <div class="listing-side-content">
+                <a href="{% url 'listing' listing_id=listing.id%}"> <h2>{{ listing.name }}</h2></a>
+                <p>{{ listing.description|truncatechars:100}}</p>
+                <h1>{{ listing.starting_price }}$</h1>
+                <p>Created  {{ listing.publishing_date|date:"M d, Y,h:i A "}}</p>
+            </div>
+       </li>
    {% endfor %}
     </ul>
-   TODO
 {% endblock %}

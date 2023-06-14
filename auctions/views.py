@@ -47,7 +47,7 @@ def listing(request, listing_id):
            bid.listing = listing
            bid.save()
            bid_form = BidForm()
-           messages.success(request,"Your bid is the current bid")
+           messages.success(request,"Your bid is the current bid!")
            current_bid_amount+=1
            return HttpResponseRedirect(listing.get_absolute_url())
         else:
